@@ -29,11 +29,11 @@ func parseFacility(s string) (Facility, error) {
 	case "sys", "system":
 		return LOG_SYSTEM, nil
 	case "app", "application":
-		return LOG_SYSTEM, nil
+		return LOG_APPLICATION, nil
 	case "service":
-		return LOG_SYSTEM, nil
+		return LOG_SERVICE, nil
 	case "security":
-		return LOG_SYSTEM, nil
+		return LOG_SECURITY, nil
 	default:
 		return LOG_SYSTEM, errors.New("unknown scheme")
 	}
