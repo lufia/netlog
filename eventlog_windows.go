@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"code.google.com/p/winsvc/eventlog"
+	"github.com/golang/sys/windows/svc/eventlog"
 )
 
 const (
@@ -36,7 +36,7 @@ func (w windowsLogger) Crit(format string, v ...interface{}) {
 	os.Exit(2)
 }
 
-func NewLogger(Facility, tag string) Logger {
+func NewLogger(facility Facility, tag string) Logger {
 	w, err := eventlog.Open(tag)
 	if err != nil {
 		log.Fatal(err)
