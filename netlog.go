@@ -97,7 +97,7 @@ func SetOutputURL(s string) error {
 	switch u.Scheme {
 	case "file":
 		// file:///var/log/xxx.log
-		fout, err := os.OpenFile(u.Path, os.O_APPEND, 0666)
+		fout, err := os.OpenFile(u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		if err != nil {
 			return err
 		}
