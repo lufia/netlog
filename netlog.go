@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"time"
 )
 
 type Logger interface {
@@ -43,11 +44,18 @@ var (
 	DefaultLogger Logger = consoleLogger{w: os.Stderr}
 )
 
+const stampFormat = "2006/01/02 15:04:05.000000"
+
 type consoleLogger struct {
 	w io.Writer
 }
 
+func (c consoleLogger) stamp(t time.Time) {
+	fmt.Fprintf(c.w, "%s ", t.Format(stampFormat))
+}
+
 func (c consoleLogger) Info(format string, v ...interface{}) {
+	c.stamp(time.Now())
 	fmt.Fprintf(c.w, format, v...)
 	if format[len(format)-1] != '\n' {
 		fmt.Fprintf(c.w, "\n")
@@ -55,6 +63,7 @@ func (c consoleLogger) Info(format string, v ...interface{}) {
 }
 
 func (c consoleLogger) Warning(format string, v ...interface{}) {
+	c.stamp(time.Now())
 	fmt.Fprintf(c.w, format, v...)
 	if format[len(format)-1] != '\n' {
 		fmt.Fprintf(c.w, "\n")
@@ -62,6 +71,7 @@ func (c consoleLogger) Warning(format string, v ...interface{}) {
 }
 
 func (c consoleLogger) Err(format string, v ...interface{}) {
+	c.stamp(time.Now())
 	fmt.Fprintf(c.w, format, v...)
 	if format[len(format)-1] != '\n' {
 		fmt.Fprintf(c.w, "\n")
@@ -69,6 +79,7 @@ func (c consoleLogger) Err(format string, v ...interface{}) {
 }
 
 func (c consoleLogger) Crit(format string, v ...interface{}) {
+	c.stamp(time.Now())
 	fmt.Fprintf(c.w, format, v...)
 	if format[len(format)-1] != '\n' {
 		fmt.Fprintf(c.w, "\n")
