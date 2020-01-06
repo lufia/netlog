@@ -96,26 +96,23 @@ func (c consoleLogger) Crit(format string, v ...interface{}) {
 }
 
 // SetOutputURL is to set output for netlog.
-func SetOutputURL(s string, debug ...bool) error {
-	u, err := url.Parse(s)
-	if err != nil {
-		return err
+func SetOutputURL(s string, debug ...bool) (err error) {
+	var u *url.URL
+	if u, err = url.Parse(s); err != nil {
+		return
 	}
 
-	isDebug := func(debug ...bool) (ret bool) {
-		if len(debug) > 0 {
-			ret = debug[0]
-		}
-		return
-	}(debug...)
+	var isDebug bool
+	if len(debug) > 0 {
+		isDebug = debug[0]
+	}
 
 	q := u.Query()
 	facility := LOG_APPLICATION
 	t := q.Get("facility")
 	if t != "" {
-		facility, err = parseFacility(t)
-		if err != nil {
-			return err
+		if facility, err = parseFacility(t); err != nil {
+			return
 		}
 	}
 	tag := q.Get("tag")
@@ -123,18 +120,21 @@ func SetOutputURL(s string, debug ...bool) error {
 	switch u.Scheme {
 	case "file":
 		// file:///var/log/xxx.log
-		fout, err := os.OpenFile(u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-		if err != nil {
-			return err
+		var fp *os.File
+		if fp, err = os.OpenFile(u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
+			return
 		}
-		DefaultLogger = consoleLogger{w: fout, d: isDebug}
+		DefaultLogger = consoleLogger{w: fp, d: isDebug}
 		return nil
 	case "net":
 		// net:///?facility=x&tag=x
-		DefaultLogger = NewLogger(facility, tag, isDebug)
-		return nil
-	case "tcp", "tcp4", "tcp6":
-		// tcp://localhost/?facility=x&tag=x
+		DefaultLogger, err = NewLogger(facility, tag, isDebug)
+		return
+	case "tcp":
+		// tcp://localhost:port/?facility=x&tag=x
+		DefaultLogger, err = NewLogger(facility, tag, isDebug, u.Host)
+		return
+	case "tcp4", "tcp6":
 		return errors.New("not implemented")
 	default:
 		// ??

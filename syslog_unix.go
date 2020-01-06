@@ -4,7 +4,6 @@ package netlog
 
 import (
 	"fmt"
-	"log"
 	"log/syslog"
 	"os"
 )
@@ -44,10 +43,12 @@ func (w unixLogger) Crit(format string, v ...interface{}) {
 	os.Exit(2)
 }
 
-func NewLogger(f Facility, tag string, debug bool) Logger {
-	w, err := syslog.New(syslog.Priority(f), tag)
-	if err != nil {
-		log.Fatal(err)
+func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logger, err error) {
+	var w *syslog.Writer
+	if len(addr) > 0 {
+		w, err = syslog.Dial("tcp", addr[0], syslog.Priority(f), tag)
+	} else {
+		w, err = syslog.New(syslog.Priority(f), tag)
 	}
-	return unixLogger{w: w, d: debug}
+	return unixLogger{w: w, d: debug}, err
 }

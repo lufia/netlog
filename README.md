@@ -10,11 +10,17 @@ logging package
     var logOutput string
     logOutput = "file:///var/log/example.log"
     ```
-* output via syslog
+* output via syslog in local
     * ex. facility: sys, tag: example
     ```
     var logOutput string
     logOutput = "net:///?facility=sys&tag=example"
+    ```
+* output via syslog with TCP connection (Windows OS is not supported)
+    * ex. facility: sys, tag: example
+    ```
+    var logOutput string
+    logOutput = tcp://localhost:601/?facility=sys&tag=example"
     ```
 2. Initialize using log output destination.
     ```

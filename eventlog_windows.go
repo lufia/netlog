@@ -2,7 +2,6 @@ package netlog
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/golang/sys/windows/svc/eventlog"
@@ -43,10 +42,12 @@ func (w windowsLogger) Crit(format string, v ...interface{}) {
 	os.Exit(2)
 }
 
-func NewLogger(facility Facility, tag string, debug bool) Logger {
-	w, err := eventlog.Open(tag)
-	if err != nil {
-		log.Fatal(err)
+func NewLogger(f Facility, tag string, debug bool) (logger Logger, err error) {
+	var w *syslog.Writer
+	if len(addr) > 0 {
+		err = errors.New("not implemented")
+	} else {
+		w, err = eventlog.Open(tag)
 	}
-	return windowsLogger{w: w, d:debug}
+	return windowsLogger{w: w, d:debug}, err
 }
