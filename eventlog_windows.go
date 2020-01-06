@@ -1,6 +1,7 @@
 package netlog
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -42,8 +43,8 @@ func (w windowsLogger) Crit(format string, v ...interface{}) {
 	os.Exit(2)
 }
 
-func NewLogger(f Facility, tag string, debug bool) (logger Logger, err error) {
-	var w *syslog.Writer
+func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logger, err error) {
+	var w *eventlog.Log
 	if len(addr) > 0 {
 		err = errors.New("not implemented")
 	} else {
