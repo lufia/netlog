@@ -10,11 +10,20 @@ import (
 )
 
 type Logger interface {
+	Debug(format string, v ...interface{})
 	Info(format string, v ...interface{})
 	Warning(format string, v ...interface{})
 	Err(format string, v ...interface{})
 	Crit(format string, v ...interface{})
 }
+
+const (
+	logHeaderDebug   = "debug: "
+	logHeaderInfo    = "info:  "
+	logHeaderWarning = "warn:  "
+	logHeaderErr     = "error: "
+	logHeaderCrit    = "crit:  "
+)
 
 type Facility int
 
@@ -48,51 +57,57 @@ const stampFormat = "2006/01/02 15:04:05.000000"
 
 type consoleLogger struct {
 	w io.Writer
+	d bool
 }
 
 func (c consoleLogger) stamp(t time.Time) {
 	fmt.Fprintf(c.w, "%s ", t.Format(stampFormat))
 }
 
-func (c consoleLogger) Info(format string, v ...interface{}) {
+func (c consoleLogger) print(format string, v ...interface{}) {
 	c.stamp(time.Now())
 	fmt.Fprintf(c.w, format, v...)
 	if format[len(format)-1] != '\n' {
 		fmt.Fprintf(c.w, "\n")
 	}
+}
+
+func (c consoleLogger) Debug(format string, v ...interface{}) {
+	if c.d {
+		c.print(logHeaderDebug+format, v...)
+	}
+}
+
+func (c consoleLogger) Info(format string, v ...interface{}) {
+	c.print(logHeaderInfo+format, v...)
 }
 
 func (c consoleLogger) Warning(format string, v ...interface{}) {
-	c.stamp(time.Now())
-	fmt.Fprintf(c.w, format, v...)
-	if format[len(format)-1] != '\n' {
-		fmt.Fprintf(c.w, "\n")
-	}
+	c.print(logHeaderWarning+format, v...)
 }
 
 func (c consoleLogger) Err(format string, v ...interface{}) {
-	c.stamp(time.Now())
-	fmt.Fprintf(c.w, format, v...)
-	if format[len(format)-1] != '\n' {
-		fmt.Fprintf(c.w, "\n")
-	}
+	c.print(logHeaderErr+format, v...)
 }
 
 func (c consoleLogger) Crit(format string, v ...interface{}) {
-	c.stamp(time.Now())
-	fmt.Fprintf(c.w, format, v...)
-	if format[len(format)-1] != '\n' {
-		fmt.Fprintf(c.w, "\n")
-	}
+	c.print(logHeaderCrit+format, v...)
 	os.Exit(2)
 }
 
 // SetOutputURL is to set output for netlog.
-func SetOutputURL(s string) error {
+func SetOutputURL(s string, debug ...bool) error {
 	u, err := url.Parse(s)
 	if err != nil {
 		return err
 	}
+
+	isDebug := func(debug ...bool) (ret bool) {
+		if len(debug) > 0 {
+			ret = debug[0]
+		}
+		return
+	}(debug...)
 
 	q := u.Query()
 	facility := LOG_APPLICATION
@@ -112,11 +127,11 @@ func SetOutputURL(s string) error {
 		if err != nil {
 			return err
 		}
-		DefaultLogger = consoleLogger{w: fout}
+		DefaultLogger = consoleLogger{w: fout, d: isDebug}
 		return nil
 	case "net":
 		// net:///?facility=x&tag=x
-		DefaultLogger = NewLogger(facility, tag)
+		DefaultLogger = NewLogger(facility, tag, isDebug)
 		return nil
 	case "tcp", "tcp4", "tcp6":
 		// tcp://localhost/?facility=x&tag=x
@@ -125,6 +140,10 @@ func SetOutputURL(s string) error {
 		// ??
 		return errors.New("unsupported scheme")
 	}
+}
+
+func Debug(format string, v ...interface{}) {
+	DefaultLogger.Debug(format, v...)
 }
 
 func Info(format string, v ...interface{}) {

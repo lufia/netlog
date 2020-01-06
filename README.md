@@ -37,6 +37,9 @@ logging package
     )
     
     func example() {
+        // netlog.SetOutputURL(logOutput, debugMode)
+        netlog.Debug("output if the debug flag is enabled at initialization")
+
         netlog.Info("this is info message")
         netlog.Warning("this is warning message")
         netlog.Err("this is error message")
@@ -51,3 +54,4 @@ logging package
 | netlog.Err() | LOG_ERR | 3001 |
 | netlog.Warning() | LOG_WARNING | 2001 |
 | netlog.Info() | LOG_INFO |1001 |
+| netlog.Debug() | LOG_DEBUG | 1001 |
