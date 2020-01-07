@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/golang/sys/windows/svc/eventlog"
+	"golang.org/x/sys/windows/svc/eventlog"
 )
 
 const (
@@ -50,5 +50,5 @@ func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logge
 	} else {
 		w, err = eventlog.Open(tag)
 	}
-	return windowsLogger{w: w, d:debug}, err
+	return windowsLogger{w: w, d: debug}, err
 }
