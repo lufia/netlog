@@ -10,14 +10,12 @@ import (
 )
 
 type Logger interface {
-	Debug(format string, v ...interface{})
-	Info(format string, v ...interface{})
-	Warning(format string, v ...interface{})
-	Err(format string, v ...interface{})
-	Crit(format string, v ...interface{})
-
-	// SetDebug can enable/disable debug mode.
-	SetDebug(bool)
+	debug(format string, v ...interface{})
+	info(format string, v ...interface{})
+	warning(format string, v ...interface{})
+	err(format string, v ...interface{})
+	crit(format string, v ...interface{})
+	setDebug(bool)
 }
 
 const (
@@ -75,31 +73,30 @@ func (c consoleLogger) print(format string, v ...interface{}) {
 	}
 }
 
-func (c consoleLogger) Debug(format string, v ...interface{}) {
+func (c consoleLogger) debug(format string, v ...interface{}) {
 	if c.d {
 		c.print(logHeaderDebug+format, v...)
 	}
 }
 
-func (c consoleLogger) Info(format string, v ...interface{}) {
+func (c consoleLogger) info(format string, v ...interface{}) {
 	c.print(logHeaderInfo+format, v...)
 }
 
-func (c consoleLogger) Warning(format string, v ...interface{}) {
+func (c consoleLogger) warning(format string, v ...interface{}) {
 	c.print(logHeaderWarning+format, v...)
 }
 
-func (c consoleLogger) Err(format string, v ...interface{}) {
+func (c consoleLogger) err(format string, v ...interface{}) {
 	c.print(logHeaderErr+format, v...)
 }
 
-func (c consoleLogger) Crit(format string, v ...interface{}) {
+func (c consoleLogger) crit(format string, v ...interface{}) {
 	c.print(logHeaderCrit+format, v...)
 	os.Exit(2)
 }
 
-// SetDebug can enable/disable debug mode.
-func (c *consoleLogger) SetDebug(status bool) {
+func (c *consoleLogger) setDebug(status bool) {
 	c.d = status
 }
 
@@ -136,11 +133,11 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 		return nil
 	case "net":
 		// net:///?facility=x&tag=x
-		DefaultLogger, err = NewLogger(facility, tag, isDebug)
+		DefaultLogger, err = newLogger(facility, tag, isDebug)
 		return
 	case "tcp":
 		// tcp://localhost:port/?facility=x&tag=x
-		DefaultLogger, err = NewLogger(facility, tag, isDebug, u.Host)
+		DefaultLogger, err = newLogger(facility, tag, isDebug, u.Host)
 		return
 	case "tcp4", "tcp6":
 		return errors.New("not implemented")
@@ -156,21 +153,21 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 // This log level need not be treated as an anomaly.
 // The debug status can be set from SetDebug.
 func Debug(format string, v ...interface{}) {
-	DefaultLogger.Debug(format, v...)
+	DefaultLogger.debug(format, v...)
 }
 
 // Info outputs information level log output.
 // It is usually used to output interesting events.
 // This log level need not be treated as an anomaly.
 func Info(format string, v ...interface{}) {
-	DefaultLogger.Info(format, v...)
+	DefaultLogger.info(format, v...)
 }
 
 // Warning outputs warning level log output.
 // It is usually used to output exceptional occurrences that are not errors.
 // This log level need not be treated as an anomaly.
 func Warning(format string, v ...interface{}) {
-	DefaultLogger.Warning(format, v...)
+	DefaultLogger.warning(format, v...)
 }
 
 // Err outputs error level log output.
@@ -178,7 +175,7 @@ func Warning(format string, v ...interface{}) {
 // immediate action but should typically be logged and monitored.
 // This log level need be treated as an anomaly.
 func Err(format string, v ...interface{}) {
-	DefaultLogger.Err(format, v...)
+	DefaultLogger.err(format, v...)
 }
 
 // Crit outputs critical level log output.
@@ -186,10 +183,10 @@ func Err(format string, v ...interface{}) {
 // When this method is executed, the process abends after outputting the log.
 // This log level need be treated as an anomaly.
 func Crit(format string, v ...interface{}) {
-	DefaultLogger.Crit(format, v...)
+	DefaultLogger.crit(format, v...)
 }
 
 // SetDebug can enable/disable debug mode.
 func SetDebug(state bool) {
-	DefaultLogger.SetDebug(state)
+	DefaultLogger.setDebug(state)
 }

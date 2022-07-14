@@ -20,35 +20,34 @@ type windowsLogger struct {
 	d bool
 }
 
-func (w windowsLogger) Debug(format string, v ...interface{}) {
+func (w windowsLogger) debug(format string, v ...interface{}) {
 	if w.d {
 		w.w.Info(1001, fmt.Sprintf(format, v...))
 	}
 }
 
-func (w windowsLogger) Info(format string, v ...interface{}) {
+func (w windowsLogger) info(format string, v ...interface{}) {
 	w.w.Info(1001, fmt.Sprintf(format, v...))
 }
 
-func (w windowsLogger) Warning(format string, v ...interface{}) {
+func (w windowsLogger) warning(format string, v ...interface{}) {
 	w.w.Warning(2001, fmt.Sprintf(format, v...))
 }
 
-func (w windowsLogger) Err(format string, v ...interface{}) {
+func (w windowsLogger) err(format string, v ...interface{}) {
 	w.w.Error(3001, fmt.Sprintf(format, v...))
 }
 
-func (w windowsLogger) Crit(format string, v ...interface{}) {
+func (w windowsLogger) crit(format string, v ...interface{}) {
 	w.w.Error(4001, fmt.Sprintf(format, v...))
 	os.Exit(2)
 }
 
-// SetDebug can enable/disable debug mode.
-func (w *windowsLogger) SetDebug(status bool) {
+func (w *windowsLogger) setDebug(status bool) {
 	w.d = status
 }
 
-func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logger, err error) {
+func newLogger(f Facility, tag string, debug bool, addr ...string) (logger Logger, err error) {
 	var w *eventlog.Log
 	if len(addr) > 0 {
 		err = errors.New("not implemented")
