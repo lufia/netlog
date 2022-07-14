@@ -150,22 +150,41 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 	}
 }
 
+// Debug outputs debug level log output.
+// It is usually used to output detailed debug information.
+// If debug status is not enabled, no output is generated.
+// This log level need not be treated as an anomaly.
+// The debug status can be set from SetDebug.
 func Debug(format string, v ...interface{}) {
 	DefaultLogger.Debug(format, v...)
 }
 
+// Info outputs information level log output.
+// It is usually used to output interesting events.
+// This log level need not be treated as an anomaly.
 func Info(format string, v ...interface{}) {
 	DefaultLogger.Info(format, v...)
 }
 
+// Warning outputs warning level log output.
+// It is usually used to output exceptional occurrences that are not errors.
+// This log level need not be treated as an anomaly.
 func Warning(format string, v ...interface{}) {
 	DefaultLogger.Warning(format, v...)
 }
 
+// Err outputs error level log output.
+// It is usually used to output execution-time errors that do not require
+// immediate action but should typically be logged and monitored.
+// This log level need be treated as an anomaly.
 func Err(format string, v ...interface{}) {
 	DefaultLogger.Err(format, v...)
 }
 
+// Crit outputs critical level log output.
+// It is usually used to output critical conditions.
+// When this method is executed, the process abends after outputting the log.
+// This log level need be treated as an anomaly.
 func Crit(format string, v ...interface{}) {
 	DefaultLogger.Crit(format, v...)
 }
