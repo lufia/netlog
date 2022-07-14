@@ -43,6 +43,11 @@ func (w windowsLogger) Crit(format string, v ...interface{}) {
 	os.Exit(2)
 }
 
+// SetDebug can enable/disable debug mode.
+func (w *windowsLogger) SetDebug(status bool) {
+	w.d = status
+}
+
 func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logger, err error) {
 	var w *eventlog.Log
 	if len(addr) > 0 {
@@ -50,5 +55,5 @@ func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logge
 	} else {
 		w, err = eventlog.Open(tag)
 	}
-	return windowsLogger{w: w, d: debug}, err
+	return &windowsLogger{w: w, d: debug}, err
 }

@@ -15,6 +15,9 @@ type Logger interface {
 	Warning(format string, v ...interface{})
 	Err(format string, v ...interface{})
 	Crit(format string, v ...interface{})
+
+	// SetDebug can enable/disable debug mode.
+	SetDebug(bool)
 }
 
 const (
@@ -28,29 +31,29 @@ const (
 type Facility int
 
 const (
-	LOG_SYSTEM      = facilitySystem
-	LOG_APPLICATION = facilityApplication
-	LOG_SERVICE     = facilityService
-	LOG_SECURITY    = facilitySecurity
+	LogSystem      = facilitySystem
+	LogApplication = facilityApplication
+	LogService     = facilityService
+	LogSecurity    = facilitySecurity
 )
 
 func parseFacility(s string) (Facility, error) {
 	switch s {
 	case "sys", "system":
-		return LOG_SYSTEM, nil
+		return LogSystem, nil
 	case "app", "application":
-		return LOG_APPLICATION, nil
+		return LogApplication, nil
 	case "service":
-		return LOG_SERVICE, nil
+		return LogService, nil
 	case "security":
-		return LOG_SECURITY, nil
+		return LogSecurity, nil
 	default:
-		return LOG_SYSTEM, errors.New("unknown scheme")
+		return LogSystem, errors.New("unknown scheme")
 	}
 }
 
 var (
-	DefaultLogger Logger = consoleLogger{w: os.Stderr}
+	DefaultLogger Logger = &consoleLogger{w: os.Stderr}
 )
 
 const stampFormat = "2006/01/02 15:04:05.000000"
@@ -95,6 +98,11 @@ func (c consoleLogger) Crit(format string, v ...interface{}) {
 	os.Exit(2)
 }
 
+// SetDebug can enable/disable debug mode.
+func (c *consoleLogger) SetDebug(status bool) {
+	c.d = status
+}
+
 // SetOutputURL is to set output for netlog.
 func SetOutputURL(s string, debug ...bool) (err error) {
 	var u *url.URL
@@ -108,7 +116,7 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 	}
 
 	q := u.Query()
-	facility := LOG_APPLICATION
+	facility := LogApplication
 	t := q.Get("facility")
 	if t != "" {
 		if facility, err = parseFacility(t); err != nil {
@@ -124,7 +132,7 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 		if fp, err = os.OpenFile(u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
 			return
 		}
-		DefaultLogger = consoleLogger{w: fp, d: isDebug}
+		DefaultLogger = &consoleLogger{w: fp, d: isDebug}
 		return nil
 	case "net":
 		// net:///?facility=x&tag=x
@@ -160,4 +168,9 @@ func Err(format string, v ...interface{}) {
 
 func Crit(format string, v ...interface{}) {
 	DefaultLogger.Crit(format, v...)
+}
+
+// SetDebug can enable/disable debug mode.
+func SetDebug(state bool) {
+	DefaultLogger.SetDebug(state)
 }

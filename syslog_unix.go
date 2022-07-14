@@ -43,6 +43,11 @@ func (w unixLogger) Crit(format string, v ...interface{}) {
 	os.Exit(2)
 }
 
+// SetDebug can enable/disable debug mode.
+func (w *unixLogger) SetDebug(status bool) {
+	w.d = status
+}
+
 func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logger, err error) {
 	var w *syslog.Writer
 	if len(addr) > 0 {
@@ -50,5 +55,5 @@ func NewLogger(f Facility, tag string, debug bool, addr ...string) (logger Logge
 	} else {
 		w, err = syslog.New(syslog.Priority(f), tag)
 	}
-	return unixLogger{w: w, d: debug}, err
+	return &unixLogger{w: w, d: debug}, err
 }
