@@ -10,11 +10,12 @@ import (
 )
 
 type Logger interface {
-	Debug(format string, v ...interface{})
-	Info(format string, v ...interface{})
-	Warning(format string, v ...interface{})
-	Err(format string, v ...interface{})
-	Crit(format string, v ...interface{})
+	debug(format string, v ...interface{})
+	info(format string, v ...interface{})
+	warning(format string, v ...interface{})
+	err(format string, v ...interface{})
+	crit(format string, v ...interface{})
+	setDebug(bool)
 }
 
 const (
@@ -28,29 +29,29 @@ const (
 type Facility int
 
 const (
-	LOG_SYSTEM      = facilitySystem
-	LOG_APPLICATION = facilityApplication
-	LOG_SERVICE     = facilityService
-	LOG_SECURITY    = facilitySecurity
+	LogSystem      = facilitySystem
+	LogApplication = facilityApplication
+	LogService     = facilityService
+	LogSecurity    = facilitySecurity
 )
 
 func parseFacility(s string) (Facility, error) {
 	switch s {
 	case "sys", "system":
-		return LOG_SYSTEM, nil
+		return LogSystem, nil
 	case "app", "application":
-		return LOG_APPLICATION, nil
+		return LogApplication, nil
 	case "service":
-		return LOG_SERVICE, nil
+		return LogService, nil
 	case "security":
-		return LOG_SECURITY, nil
+		return LogSecurity, nil
 	default:
-		return LOG_SYSTEM, errors.New("unknown scheme")
+		return LogSystem, errors.New("unknown scheme")
 	}
 }
 
 var (
-	DefaultLogger Logger = consoleLogger{w: os.Stderr}
+	DefaultLogger Logger = &consoleLogger{w: os.Stderr}
 )
 
 const stampFormat = "2006/01/02 15:04:05.000000"
@@ -72,27 +73,31 @@ func (c consoleLogger) print(format string, v ...interface{}) {
 	}
 }
 
-func (c consoleLogger) Debug(format string, v ...interface{}) {
+func (c consoleLogger) debug(format string, v ...interface{}) {
 	if c.d {
 		c.print(logHeaderDebug+format, v...)
 	}
 }
 
-func (c consoleLogger) Info(format string, v ...interface{}) {
+func (c consoleLogger) info(format string, v ...interface{}) {
 	c.print(logHeaderInfo+format, v...)
 }
 
-func (c consoleLogger) Warning(format string, v ...interface{}) {
+func (c consoleLogger) warning(format string, v ...interface{}) {
 	c.print(logHeaderWarning+format, v...)
 }
 
-func (c consoleLogger) Err(format string, v ...interface{}) {
+func (c consoleLogger) err(format string, v ...interface{}) {
 	c.print(logHeaderErr+format, v...)
 }
 
-func (c consoleLogger) Crit(format string, v ...interface{}) {
+func (c consoleLogger) crit(format string, v ...interface{}) {
 	c.print(logHeaderCrit+format, v...)
 	os.Exit(2)
+}
+
+func (c *consoleLogger) setDebug(status bool) {
+	c.d = status
 }
 
 // SetOutputURL is to set output for netlog.
@@ -108,7 +113,7 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 	}
 
 	q := u.Query()
-	facility := LOG_APPLICATION
+	facility := LogApplication
 	t := q.Get("facility")
 	if t != "" {
 		if facility, err = parseFacility(t); err != nil {
@@ -124,15 +129,15 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 		if fp, err = os.OpenFile(u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
 			return
 		}
-		DefaultLogger = consoleLogger{w: fp, d: isDebug}
+		DefaultLogger = &consoleLogger{w: fp, d: isDebug}
 		return nil
 	case "net":
 		// net:///?facility=x&tag=x
-		DefaultLogger, err = NewLogger(facility, tag, isDebug)
+		DefaultLogger, err = newLogger(facility, tag, isDebug)
 		return
 	case "tcp":
 		// tcp://localhost:port/?facility=x&tag=x
-		DefaultLogger, err = NewLogger(facility, tag, isDebug, u.Host)
+		DefaultLogger, err = newLogger(facility, tag, isDebug, u.Host)
 		return
 	case "tcp4", "tcp6":
 		return errors.New("not implemented")
@@ -142,22 +147,46 @@ func SetOutputURL(s string, debug ...bool) (err error) {
 	}
 }
 
+// Debug outputs debug level log output.
+// It is usually used to output detailed debug information.
+// If debug status is not enabled, no output is generated.
+// This log level need not be treated as an anomaly.
+// The debug status can be set from SetDebug.
 func Debug(format string, v ...interface{}) {
-	DefaultLogger.Debug(format, v...)
+	DefaultLogger.debug(format, v...)
 }
 
+// Info outputs information level log output.
+// It is usually used to output interesting events.
+// This log level need not be treated as an anomaly.
 func Info(format string, v ...interface{}) {
-	DefaultLogger.Info(format, v...)
+	DefaultLogger.info(format, v...)
 }
 
+// Warning outputs warning level log output.
+// It is usually used to output exceptional occurrences that are not errors.
+// This log level need not be treated as an anomaly.
 func Warning(format string, v ...interface{}) {
-	DefaultLogger.Warning(format, v...)
+	DefaultLogger.warning(format, v...)
 }
 
+// Err outputs error level log output.
+// It is usually used to output execution-time errors that do not require
+// immediate action but should typically be logged and monitored.
+// This log level need be treated as an anomaly.
 func Err(format string, v ...interface{}) {
-	DefaultLogger.Err(format, v...)
+	DefaultLogger.err(format, v...)
 }
 
+// Crit outputs critical level log output.
+// It is usually used to output critical conditions.
+// When this method is executed, the process abends after outputting the log.
+// This log level need be treated as an anomaly.
 func Crit(format string, v ...interface{}) {
-	DefaultLogger.Crit(format, v...)
+	DefaultLogger.crit(format, v...)
+}
+
+// SetDebug can enable/disable debug mode.
+func SetDebug(state bool) {
+	DefaultLogger.setDebug(state)
 }
