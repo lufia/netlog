@@ -1,3 +1,5 @@
+**Deprecated**: This package isn't maintained; use **log/slog** instead.
+
 # netlog
 logging package
 
